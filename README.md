@@ -20,8 +20,8 @@
 1. Клонуйте репозиторій:
 
 ```bash
-git clone https://github.com/SerhiiRomanenko/telegram-air-alert-bot.git
-cd telegram-air-alert-bot
+git clone https://github.com/SerhiiRomanenko/telegram-alert-bot.git
+cd telegram-alert-bot
 
 ```
 

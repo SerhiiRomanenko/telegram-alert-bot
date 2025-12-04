@@ -2,7 +2,6 @@ require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 
-// ==== ENV ====
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
 const ALERTS_URL = process.env.ALERTS_URL;
@@ -12,10 +11,15 @@ console.log("BOT_TOKEN:", !!BOT_TOKEN);
 console.log("API TOKEN:", !!ALERTS_API_TOKEN);
 
 const bot = new TelegramBot(BOT_TOKEN, { polling: false });
+
 let lastStatus = null;
+let lastRaw = null;
+let isFirstRun = true;
 
 function buildMessage(baseText) {
-  return `<b>${baseText}</b>\n\n✅ <a href="https://t.me/huyova_bila_tserkva">Хуйова Біла Церква</a> | <a href="https://t.me/xy_bts">Прислати новину</a>`;
+  return `<b>${baseText}</b>\n\n` +
+         `✅ <a href="https://t.me/huyova_bila_tserkva">Хуйова Біла Церква</a> | ` +
+         `<a href="https://t.me/xy_bts">Прислати новину</a>`;
 }
 
 async function sendMessage(msg) {
@@ -29,6 +33,10 @@ async function sendMessage(msg) {
   }
 }
 
+async function sendRestartLog() {
+  console.log("♻️ Бот перезапущено (ймовірно Render заснув і прокинувся)");
+}
+
 async function checkAlerts() {
   try {
     const response = await fetch(ALERTS_URL, {
@@ -36,14 +44,25 @@ async function checkAlerts() {
     });
 
     const raw = await response.text();
-    const data = raw.replace(/"/g, "");
+    const clean = raw.replace(/"/g, "");
 
-    console.log("DATA:", data);
+    if (clean === lastRaw) {
+      console.log("Дубльований API статус — пропускаю");
+      return;
+    }
 
-    let status = "clear";
-    if (data === "A" || data === "P") status = "alert";
+    lastRaw = clean;
+
+    let status = (clean === "A" || clean === "P") ? "alert" : "clear";
 
     console.log("Статус зараз:", status);
+
+    if (isFirstRun) {
+      isFirstRun = false;
+      lastStatus = status;
+      await sendRestartLog(); 
+      return;
+    }
 
     if (status !== lastStatus) {
       if (status === "alert") {
@@ -51,9 +70,9 @@ async function checkAlerts() {
       } else {
         await sendMessage(buildMessage("🟢 ВІДБІЙ! — можна курити"));
       }
-
       lastStatus = status;
     }
+
   } catch (err) {
     console.error("Помилка при запиті API:", err.message);
   }
@@ -63,7 +82,6 @@ checkAlerts();
 setInterval(checkAlerts, 25000);
 
 const app = express();
-
 app.get("/", (req, res) => {
   res.send("Бот працює 🚀");
 });

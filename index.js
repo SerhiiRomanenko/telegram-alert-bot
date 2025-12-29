@@ -139,7 +139,7 @@ async function checkAlerts() {
         const media = randomItem(CLEAR_MEDIA);
         await sendMediaMessage(
           media,
-          buildMessage("🟢 ВІДБІЙ! — можна єблувати далі")
+          buildMessage("🟢 Відбій! \n — МОЖНА ЄБЛУВАТИ ДАЛІ")
         );
       }
 

@@ -46,6 +46,8 @@ const CLEAR_MEDIA = [
   { type: "photo", file: "cancel4.jpg" },
   { type: "photo", file: "cancel5.jpg" },
   { type: "photo", file: "cancel6.jpg" },
+  { type: "video", file: "cancel7.mp4" }
+
 ];
 
 /* ================= HELPERS ================= */

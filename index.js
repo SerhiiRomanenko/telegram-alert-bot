@@ -1,8 +1,6 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 
 /* ================= ENV ================= */
 
@@ -22,75 +20,30 @@ let lastStatus = null;
 let lastRaw = null;
 let isFirstRun = true;
 
-/* ================= MEDIA ================= */
-
-
-const ALERT_MEDIA = [
-  { type: "video", file: "alert1.mp4" },
-  { type: "video", file: "alert2.mp4" },
-  { type: "video", file: "alert3.mp4" },
-  { type: "video", file: "alert4.mp4" },
-  { type: "photo", file: "alert5.jpg" },
-  { type: "photo", file: "alert6.jpg" },
-  { type: "video", file: "alert7.mp4" },
-  { type: "video", file: "alert8.mp4" },
-  { type: "video", file: "alert9.mp4" },
-  { type: "video", file: "alert10.mp4" }
-];
-
-
-const CLEAR_MEDIA = [
-  { type: "photo", file: "cancel1.jpg" },
-  { type: "photo", file: "cancel2.jpg" },
-  { type: "photo", file: "cancel3.jpg" },
-  { type: "photo", file: "cancel4.jpg" },
-  { type: "photo", file: "cancel5.jpg" },
-  { type: "photo", file: "cancel6.jpg" },
-  { type: "video", file: "cancel7.mp4" }
-
-];
-
 /* ================= HELPERS ================= */
 
-function randomItem(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function buildMessage(baseText) {
-  return `<b>${baseText}</b>\n\n` +
-    `✅ <a href="https://t.me/huyova_bila_tserkva">Хуйова Біла Церква</a> | ` +
-    `<a href="https://t.me/xy_dmin">Прислати новину</a>`;
-}
-
-function getFileStream(fileName) {
-  return fs.createReadStream(
-    path.join(__dirname, "images", fileName)
-  );
-}
-
-async function sendMediaMessage(media, caption) {
-  const options = {
-    caption,
-    parse_mode: "HTML",
-    disable_web_page_preview: true
+function buildKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        {
+          text: "🔴 Відкрити моніторинг загроз",
+          url: "https://t.me/xybc_live"
+        }
+      ]
+    ]
   };
+}
 
+async function sendMessage(text) {
   try {
-    const fileStream = getFileStream(media.file);
-
-    if (media.type === "photo") {
-      await bot.sendPhoto(CHAT_ID, fileStream, options);
-    }
-
-    if (media.type === "animation") {
-      await bot.sendAnimation(CHAT_ID, fileStream, options);
-    }
-
-    if (media.type === "video") {
-      await bot.sendVideo(CHAT_ID, fileStream, options);
-    }
+    await bot.sendMessage(CHAT_ID, text, {
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      reply_markup: buildKeyboard()
+    });
   } catch (err) {
-    console.error("Помилка надсилання медіа:", err.message);
+    console.error("Помилка надсилання повідомлення:", err.message);
   }
 }
 
@@ -130,17 +83,9 @@ async function checkAlerts() {
 
     if (status !== lastStatus) {
       if (status === "alert") {
-        const media = randomItem(ALERT_MEDIA);
-        await sendMediaMessage(
-          media,
-          buildMessage("🚨 В БЦ районі повітряна тривога — ПЕРЕШЛИ БЛИЗЬКИМ!")
-        );
+        await sendMessage("<b>🚨 ПОВІТРЯНА ТРИВОГА</b>\n\n❗️ ДІЗНАТИСЯ ПРИЧИНУ ТРИВОГИ: @xybc_live");
       } else {
-        const media = randomItem(CLEAR_MEDIA);
-        await sendMediaMessage(
-          media,
-          buildMessage("🟢 Відбій! \n — МОЖНА ЄБЛУВАТИ ДАЛІ")
-        );
+        await sendMessage("<b>🟢 ВІДБІЙ ПОВІТРЯНОЇ ТРИВОГИ</b>\n\n❗️ ДІЗНАТИСЯ ПРИЧИНУ ТРИВОГИ: @xybc_live");
       }
 
       lastStatus = status;
